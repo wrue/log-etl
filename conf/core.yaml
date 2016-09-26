@@ -5,7 +5,7 @@
 ###############################################################################
 core:
     # The address that the cli process will use for callbacks from chaincodes
-    hdfsAppLogDir: E:\\easou\\applog\\
+    hdfsAppLogDir: E:\applog\
     processorNum: 1
     processWorkDirPath: E:\data1\applog\processWorkDirPath\
     fileToProcessor: 1
