@@ -16,28 +16,24 @@ type DirChangeHandler interface {
 	fileCreated(file string)
 }
 
-var previous *collection.Set
-
-func init() {
-	previous = collection.NewSet()
-}
-
-func NewDirFileWatcher(dir string, extensions []string, checkPeriod int64) *DirFileWatcher {
+func newDirFileWatcher(dir string, extensions []string, checkPeriod string) *dirFileWatcher {
 	l := list.New()
-	return &DirFileWatcher{LogDir: dir, Extensions: extensions,
-		CheckPeriod: checkPeriod, Done: false, ListDirChangeHandler: l}
+	previous := collection.NewSet()
+	return &dirFileWatcher{LogDir: dir, Extensions: extensions,
+		CheckPeriod: checkPeriod, Done: false, ListDirChangeHandler: l, previous: previous}
 }
 
-type DirFileWatcher struct {
+type dirFileWatcher struct {
 	LogDir               string   //监控目录
 	Extensions           []string //监控文件扩展名
-	CheckPeriod          int64    //检查周期
+	CheckPeriod          string   //检查周期
 	Done                 bool
 	ListDirChangeHandler *list.List
+	previous             *collection.Set
 	sync.Mutex
 }
 
-func (this *DirFileWatcher) AddHandler(hander DirChangeHandler) {
+func (this *dirFileWatcher) AddHandler(hander DirChangeHandler) {
 	this.ListDirChangeHandler.PushBack(hander)
 }
 
@@ -64,14 +60,14 @@ func ListDir(dirPth string, extensions []string) (files *collection.Set, err err
 	return files, nil
 }
 
-func (this *DirFileWatcher) check() {
+func (this *dirFileWatcher) check() {
 	this.Lock()
 	defer this.Unlock()
 
 	files, _ := ListDir(this.LogDir, this.Extensions)
 	if files.Len() == 0 {
 		fmt.Println("do check ... %s", files.List())
-		for _, file := range previous.List() {
+		for _, file := range this.previous.List() {
 			file_str := file.(string)
 			this.fireDeletedFile(file_str)
 		}
@@ -81,23 +77,23 @@ func (this *DirFileWatcher) check() {
 	newFiles := files.Copy()
 	addFiles := files.Copy()
 
-	addFiles.RemoveAll(previous)
+	addFiles.RemoveAll(this.previous)
 	for _, af := range addFiles.List() {
 		addfile := af.(string)
 		this.fireCreatedFile(addfile)
 	}
-	removedFiles := previous.Copy()
+	removedFiles := this.previous.Copy()
 	removedFiles.RemoveAll(newFiles)
 
 	for _, rf := range removedFiles.List() {
 		removedFile := rf.(string)
 		this.fireDeletedFile(removedFile)
 	}
-	previous = newFiles
+	this.previous = newFiles
 
 }
 
-func (this *DirFileWatcher) fireDeletedFile(file string) {
+func (this *dirFileWatcher) fireDeletedFile(file string) {
 	for e := this.ListDirChangeHandler.Front(); e != nil; e = e.Next() {
 		//		if s, ok := (e.Value).(DirChangeHandler); ok {
 		//			s.fileDeleted(file)
@@ -107,7 +103,7 @@ func (this *DirFileWatcher) fireDeletedFile(file string) {
 	}
 }
 
-func (this *DirFileWatcher) fireCreatedFile(file string) {
+func (this *dirFileWatcher) fireCreatedFile(file string) {
 	for e := this.ListDirChangeHandler.Front(); e != nil; e = e.Next() {
 		//		if s, ok := (e.Value).(DirChangeHandler); ok {
 		//			s.fileDeleted(file)
@@ -117,15 +113,16 @@ func (this *DirFileWatcher) fireCreatedFile(file string) {
 	}
 }
 
-func (this *DirFileWatcher) loop() {
+func (this *dirFileWatcher) loop() {
 	for {
 		if !this.Done {
 			this.check()
-			time.Sleep(time.Second * 10)
+			duration, _ := time.ParseDuration(this.CheckPeriod)
+			time.Sleep(duration)
 		}
 	}
 }
 
-func (this *DirFileWatcher) Start() {
+func (this *dirFileWatcher) Start() {
 	go this.loop()
 }
