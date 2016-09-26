@@ -1,0 +1,20 @@
+###############################################################################
+#
+#    CLI section
+#
+###############################################################################
+core:
+    # The address that the cli process will use for callbacks from chaincodes
+    hdfsAppLogDir: E:\\easou\\applog\\
+    processorNum: 1
+    processWorkDirPath: E:\data1\applog\processWorkDirPath\
+    fileToProcessor: 1
+    logDirPath: E:\data1\applog\log\
+    backUpPath: E:\data1\applog\logbak\
+    checkPeriod: 30000
+    putClientTransLogPath: E:\data1\applog\trans\hdfsPutClientTrasnLog\
+    retryTimes: 1000
+    retryIntval: 20000
+    processWrokTransLogDirPath: E:\data1\applog\trans\processWorkTransLog\
+    recoverUnits: 3
+    putClient: 1
