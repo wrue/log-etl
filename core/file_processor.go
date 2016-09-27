@@ -7,6 +7,7 @@ import (
 	"log-etl/core/util"
 	"os"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 )
@@ -15,10 +16,47 @@ const (
 	Period = 60 * 60 * 1000
 )
 
+var fileToProcessor AppLogToProcessor = AppLogToProcessor{}
+
 type Processor interface {
+	Process(filename string) []SinkTask
+	SetWorkDirPath(workDirPath string)
 }
+
+type appLogProcessor struct {
+	workDirPath string
+	sinkTasks   []SinkTask
+	to_out      map[string]*os.File
+	base        string
+}
+
+func (this *appLogProcessor) print(to, line string) {
+	out, ok := this.to_out[to]
+	if ok {
+		out.WriteString(line + "\n")
+	} else {
+		path := this.base + string(os.PathSeparator) + strings.Replace(to, "/", "_", -1)
+		file, _ := os.Create(path)
+		sinTask := SinkTask{DataFilePath: path, DestFilePath: to}
+		this.sinkTasks = append(this.sinkTasks, sinTask)
+		this.to_out[to] = file
+		file.WriteString(line + "\n")
+	}
+}
+
+func (this *appLogProcessor) SetWorkDirPath(workDirPath string) {
+	this.workDirPath = workDirPath
+}
+
 type FileToProcessor interface {
 	GetProcessor(filename string) Processor
+}
+
+type AppLogToProcessor struct {
+}
+
+func (AppLogToProcessor) GetProcessor(filename string) Processor {
+	return NewActivityinfoLogProcessor()
 }
 
 type TransLog struct {
@@ -30,9 +68,14 @@ type TransLog struct {
 }
 
 type SinkTask struct {
-	DataFilePath           string
-	DestFilePath           string
-	DestFileOriginalLength int64
+	DataFilePath           string `json:dataFile`
+	DestFilePath           string `json:destFile`
+	DestFileOriginalLength int64  `json:destFileOriLen`
+}
+
+type ProcessTask struct {
+	Path      string     `json:"path"`
+	SinkTasks []SinkTask `json:"sinkTasks"`
 }
 
 func (this *TransLog) WriteAndFlush(log string) {

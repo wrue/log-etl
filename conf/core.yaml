@@ -5,17 +5,17 @@
 ###############################################################################
 core:
     # The address that the cli process will use for callbacks from chaincodes
-    hdfsAppLogDir: E:\applog\
+    hdfsAppLogDir: E:\applog
     processorNum: 1
-    processWorkDirPath: E:\data1\applog\processWorkDirPath\
+    processWorkDirPath: E:\data1\applog\processWorkDirPath
     fileToProcessor: 1
-    logDirPath: E:\data1\applog\log\
-    backUpPath: E:\data1\applog\logbak\
+    logDirPath: E:\data1\applog\log
+    backUpPath: E:\data1\applog\logbak
     checkPeriod: 10000ms
-    putClientTransLogPath: E:\data1\applog\trans\hdfsPutClientTrasnLog\
+    putClientTransLogPath: E:\data1\applog\trans\hdfsPutClientTrasnLog
     retryTimes: 1000
     retryIntval: 20000
-    processWrokTransLogDirPath: E:\data1\applog\trans\processWorkTransLog\
+    processWrokTransLogDirPath: E:\data1\applog\trans\processWorkTransLog
     recoverUnits: 3
     putClient: 1
     extensions: .txt .info

@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 )
@@ -34,9 +35,16 @@ func Test(t *testing.T) {
 	//	list.root.prev = &list.root
 	//	list.root.next = &list.root
 	//	fmt.Println(list.root)
-	tranLog := NewTransLog("E:\\data1\\applog\\trans")
-	lit := tranLog.ReadHours(0)
-	for e := lit.Front(); e != nil; e = e.Next() {
-		fmt.Println(e.Value)
-	}
+
+	var ps ProcessTask
+	ps.Path = "aaa"
+	sts := make([]SinkTask, 0, 1)
+	var st SinkTask
+	st.DataFilePath = "aa"
+	st.DestFilePath = "bb"
+	sts = append(sts, st)
+	ps.SinkTasks = sts
+
+	bb, _ := json.Marshal(ps)
+	fmt.Println(string(bb))
 }
