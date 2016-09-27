@@ -44,22 +44,34 @@ func ListDir(dirPth string, extensions []string) (files *collection.Set, err err
 		return nil, err
 	}
 	PthSep := string(os.PathSeparator)
-
-	for _, fi := range dir {
-		if fi.IsDir() { // 忽略目录
-			continue
+	if extensions == nil || len(extensions) <= 0 {
+		for _, fi := range dir {
+			if fi.IsDir() { // 忽略目录
+				continue
+			}
+			files.Add(dirPth + PthSep + fi.Name())
 		}
-		for _, extension := range extensions {
-			suffix := strings.ToUpper(extension)                       //忽略后缀匹配的大小写
-			if strings.HasSuffix(strings.ToUpper(fi.Name()), suffix) { //匹配文件
-				files.Add(dirPth + PthSep + fi.Name())
+	} else {
+		for _, fi := range dir {
+			if fi.IsDir() { // 忽略目录
+				continue
+			}
+
+			for _, extension := range extensions {
+				suffix := strings.ToUpper(extension)                       //忽略后缀匹配的大小写
+				if strings.HasSuffix(strings.ToUpper(fi.Name()), suffix) { //匹配文件
+					files.Add(dirPth + PthSep + fi.Name())
+				}
 			}
 		}
-
 	}
+
 	return files, nil
 }
 
+/**
+ *目录文件检查
+ */
 func (this *dirFileWatcher) check() {
 	this.Lock()
 	defer this.Unlock()
@@ -78,10 +90,12 @@ func (this *dirFileWatcher) check() {
 	addFiles := files.Copy()
 
 	addFiles.RemoveAll(this.previous)
+
 	for _, af := range addFiles.List() {
 		addfile := af.(string)
 		this.fireCreatedFile(addfile)
 	}
+
 	removedFiles := this.previous.Copy()
 	removedFiles.RemoveAll(newFiles)
 
@@ -90,7 +104,6 @@ func (this *dirFileWatcher) check() {
 		this.fireDeletedFile(removedFile)
 	}
 	this.previous = newFiles
-
 }
 
 func (this *dirFileWatcher) fireDeletedFile(file string) {

@@ -1,12 +1,43 @@
 package collection
 
 import (
+	"os"
 	"sync"
 )
 
 type Set struct {
 	m map[interface{}]bool
 	sync.RWMutex
+}
+
+type SortedFileArray []os.FileInfo
+
+func (sf SortedFileArray) Reverse() {
+	num := len(sf) / 2
+	for i, j := 0, len(sf)-1; i < num; i, j = i+1, j-1 {
+		sf[i], sf[j] = sf[j], sf[i]
+	}
+}
+
+func (sf SortedFileArray) Len() int {
+	return len(sf)
+}
+
+func (sf SortedFileArray) Swap(i, j int) {
+	sf[i], sf[j] = sf[j], sf[i]
+}
+
+func (sf SortedFileArray) Less(i, j int) bool {
+	return sf[i].Name() < sf[j].Name()
+}
+
+type SortedStringArray []string
+
+func (sf SortedStringArray) Reverse() {
+	num := len(sf) / 2
+	for i, j := 0, len(sf)-1; i < num; i, j = i+1, j-1 {
+		sf[i], sf[j] = sf[j], sf[i]
+	}
 }
 
 func NewSet() *Set {
